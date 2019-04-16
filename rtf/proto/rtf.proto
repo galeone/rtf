@@ -1,0 +1,55 @@
+/*
+ * Copyright 2019 Paolo Galeone <nessuno@nerdz.eu>. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+syntax = "proto3";
+
+service RTF
+{
+    // accept a stream of RTFStatement that define the Python function body.
+    // Returns a stream of RTFResponse.
+    rpc DefineAndCall(stream RTFStatement) returns (stream RTFResponse);
+}
+
+message RTFStatement
+{
+    // ID of the client
+    string uuid = 1;
+    // ID of the current statement
+    int64 node_id = 2;
+    // ID of the parent of this statement, if any
+    int64 parent_id = 3;
+    // Ordered list of the contexts, every context has a ID
+    // The context are created by the python statement `with`
+    repeated int64 contexts = 4;
+    // The statement sent
+    string stmt = 5;
+}
+
+message RTFResponse
+{
+    // The ID of the node that has been executed
+    // to generate the response.
+    int64 node_id = 1;
+
+    // Execxution status
+    bool status = 2;
+
+    // Captured Standard Output
+    string stdout = 3;
+
+    // The response value
+    bytes body = 4;
+}
