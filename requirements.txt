@@ -26,14 +26,14 @@ protobuf==3.7.1           # via googleapis-common-protos, grpcio-tools, tb-night
 psutil==5.6.1             # via tfds-nightly
 requests==2.21.0          # via tfds-nightly
 six==1.12.0               # via absl-py, grpcio, h5py, keras-preprocessing, promise, protobuf, tb-nightly, tf-nightly-2.0-preview, tfds-nightly
-tb-nightly==1.14.0a20190416  # via tf-nightly-2.0-preview
-tensorflow-estimator-2.0-preview==1.14.0.dev2019041600  # via tf-nightly-2.0-preview
+tb-nightly==1.14.0a20190419  # via tf-nightly-2.0-preview
+tensorflow-estimator-2.0-preview==1.14.0.dev2019042000  # via tf-nightly-2.0-preview
 tensorflow-metadata==0.13.0  # via tfds-nightly
 termcolor==1.1.0          # via tf-nightly-2.0-preview, tfds-nightly
-tf-nightly-2.0-preview==2.0.0.dev20190416
-tfds-nightly==1.0.2.dev201904160105
+tf-nightly-2.0-preview==2.0.0.dev20190420
+tfds-nightly==1.0.2.dev201904200105
 tqdm==4.31.1              # via tfds-nightly
-urllib3==1.24.1           # via requests
+urllib3==1.24.2           # via requests
 werkzeug==0.15.2          # via tb-nightly
 wheel==0.33.1             # via tb-nightly, tf-nightly-2.0-preview
 wrapt==1.11.1             # via tf-nightly-2.0-preview, tfds-nightly
