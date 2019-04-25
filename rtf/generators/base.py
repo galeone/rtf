@@ -22,7 +22,7 @@ import abc
 from collections import namedtuple
 
 Func = namedtuple("Func", "name signature private")
-Class = namedtuple("Class", "name methods private")
+Class = namedtuple("Class", "name init call methods private")
 Module = namedtuple("Module", "name modules functions classes private")
 
 
@@ -39,13 +39,30 @@ class Generator:
 
     @staticmethod
     def _inspect_class(element_name, element):
+        special = ["__init__", "__call__"]
+
         methods = [
             Generator._inspect_function(method_name, getattr(element, method_name))
             for method_name in dir(element)
-            if isinstance(getattr(element, method_name), types.FunctionType)
+            if method_name not in special
+            and isinstance(getattr(element, method_name), types.FunctionType)
         ]
+
+        init, call = None, None
+        for method_name in special:
+            func = getattr(element, method_name)
+            if isinstance(func, types.FunctionType):
+                if method_name == "__init__":
+                    init = Generator._inspect_function(method_name, func)
+                if method_name == "__call__":
+                    call = Generator._inspect_function(method_name, func)
+
         return Class(
-            name=element_name, methods=methods, private=element_name.startswith("_")
+            name=element_name,
+            init=init,
+            call=call,
+            methods=methods,
+            private=element_name.startswith("_"),
         )
 
     @staticmethod
