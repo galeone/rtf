@@ -18,6 +18,7 @@ import logging
 import inspect
 import types
 import importlib
+import re
 import abc
 from collections import namedtuple
 
@@ -66,6 +67,17 @@ class Generator:
         )
 
     @staticmethod
+    def snake_to_camel(name):
+        """Convert a sname_name to a CamelName."""
+        return name.replace("_", " ").title().replace(" ", "")
+
+    @staticmethod
+    def camel_to_snake(name):
+        """Convert a CamelName to a snake_name."""
+        sub = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", sub).lower()
+
+    @staticmethod
     def inspect_module(name):
         """Given a name module, returns the Module object containing its description."""
         try:
@@ -103,5 +115,13 @@ class Generator:
         files in the target language. Converts the module from python.
         """
 
+    @abc.abstractmethod
+    def create_commons(self, module, dest_dir):
+        """Create commons is called only once as the first operation of the conversion.
+        If you need to create some common files/methods that are shared and available
+        to the "convert" method, define them here.
+        """
+
     def __call__(self, module, dest_dir, keep_private=False):
-        return self.convert(module, dest_dir, keep_private)
+        self.create_commons(module, dest_dir)
+        self.convert(module, dest_dir, keep_private)

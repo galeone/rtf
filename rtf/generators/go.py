@@ -14,7 +14,6 @@
 
 """Generator for the Go programming language."""
 import os
-import re
 from .base import Generator
 
 
@@ -41,14 +40,32 @@ class Go(Generator):
         "}}\n\n"
     )
 
-    @staticmethod
-    def snake_to_camel(name):
-        return name.replace("_", " ").title().replace(" ", "")
+    def create_commons(self, module, dest_dir):
+        module_name = module.name.split(".")[-1]
+        base_dir = os.path.join(dest_dir, module_name)
+        if not os.path.isdir(base_dir):
+            os.makedirs(base_dir)
 
-    @staticmethod
-    def camel_to_snake(name):
-        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+        # TODO: Compile the .proto to .go
+
+        common_file = os.path.join(base_dir, "_" + module_name + ".go")
+        with open(common_file, "w") as fp:
+            # The header puts the file into the same package
+            fp.write(Go.HEADER.format(package=module_name))
+            fp.write("import (\n")
+            for package in ["context", "google.golang.org/grpc"]:
+                fp.write('\t"{}"\n'.format(package))
+            fp.write(")\n\n")
+            fp.write(
+                "var opts []grpc.DialOption\n"
+                "opts = append(opts, grpc.WithInsecure())\n"
+                'conn, err := grpc.Dial("127.0.0.1:5001", opts...)\n'
+                "if err != nil {\n"
+                '\tpanic("failed to dial client")\n'
+                "}\n"
+                "defer conn.Close()\n",
+                "client := rtf.NewRTFClient(conn)\n",
+            )
 
     def convert(self, module, dest_dir, keep_private=False):
         if not module:
@@ -67,7 +84,7 @@ class Go(Generator):
             for func in module.functions:
                 if not func.private or keep_private:
                     name = func.name.split(".")[-1]
-                    name = Go.snake_to_camel(name)
+                    name = Generator.snake_to_camel(name)
                     line = Go.FUNCTION.format(
                         func_name=name, func_signature=func.signature
                     )
@@ -76,9 +93,11 @@ class Go(Generator):
         # Every class is a new file. Every new file is memmber of the package.
         for cls in module.classes:
             py_name = cls.name.split(".")[-1]
-            file_path = os.path.join(base_dir, Go.camel_to_snake(py_name) + ".go")
+            file_path = os.path.join(
+                base_dir, Generator.camel_to_snake(py_name) + ".go"
+            )
             with open(file_path, "w") as fp:
-                type_name = Go.snake_to_camel(py_name)
+                type_name = Generator.snake_to_camel(py_name)
                 fp.write(Go.HEADER.format(package=module_name))
                 fp.write(Go.CLASS.format(type_name=type_name))
 
@@ -111,7 +130,9 @@ class Go(Generator):
                         fp.write(
                             Go.METHOD.format(
                                 type_name=type_name,
-                                func_name=Go.snake_to_camel(method.name.split(".")[-1]),
+                                func_name=Generator.snake_to_camel(
+                                    method.name.split(".")[-1]
+                                ),
                                 func_signature=method.signature.replace(
                                     "self", ""
                                 ).replace("(, ", "("),
