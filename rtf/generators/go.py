@@ -63,8 +63,8 @@ class Go(Generator):
                 "if err != nil {\n"
                 '\tpanic("failed to dial client")\n'
                 "}\n"
-                "defer conn.Close()\n",
-                "client := rtf.NewRTFClient(conn)\n",
+                "defer conn.Close()\n"
+                "client := rtf.NewRTFClient(conn)\n"
             )
 
     def convert(self, module, dest_dir, keep_private=False):
