@@ -6,34 +6,36 @@
 #
 absl-py==0.7.1            # via tb-nightly, tf-nightly-2.0-preview, tfds-nightly
 astor==0.7.1              # via tf-nightly-2.0-preview
+attrs==19.3.0             # via tfds-nightly
 better-setuptools-git-version==1.0.5
 certifi==2019.3.9         # via requests
 chardet==3.0.4            # via requests
+dill==0.3.1.1             # via tfds-nightly
 future==0.17.1            # via tfds-nightly
 gast==0.2.2               # via tf-nightly-2.0-preview
-google-pasta==0.1.5       # via tf-nightly-2.0-preview
+google-pasta==0.1.7       # via tf-nightly-2.0-preview
 googleapis-common-protos==1.5.9  # via tensorflow-metadata
 grpcio-tools==1.20.0
 grpcio==1.20.0
 h5py==2.9.0               # via keras-applications
 idna==2.8                 # via requests
-keras-applications==1.0.7  # via tf-nightly-2.0-preview
+keras-applications==1.0.8  # via tf-nightly-2.0-preview
 keras-preprocessing==1.0.9  # via tf-nightly-2.0-preview
 markdown==3.1             # via tb-nightly
-numpy==1.16.2             # via h5py, keras-applications, keras-preprocessing, tb-nightly, tf-nightly-2.0-preview, tfds-nightly
+numpy==1.16.2             # via h5py, keras-applications, keras-preprocessing, opt-einsum, tb-nightly, tf-nightly-2.0-preview, tfds-nightly
+opt-einsum==3.1.0         # via tf-nightly-2.0-preview
 promise==2.2.1            # via tfds-nightly
 protobuf==3.7.1           # via googleapis-common-protos, grpcio-tools, tb-nightly, tensorflow-metadata, tf-nightly-2.0-preview, tfds-nightly
-psutil==5.6.1             # via tfds-nightly
 requests==2.21.0          # via tfds-nightly
 six==1.12.0               # via absl-py, grpcio, h5py, keras-preprocessing, promise, protobuf, tb-nightly, tf-nightly-2.0-preview, tfds-nightly
-tb-nightly==1.14.0a20190419  # via tf-nightly-2.0-preview
-tensorflow-estimator-2.0-preview==1.14.0.dev2019042000  # via tf-nightly-2.0-preview
+tb-nightly==2.1.0a20191022  # via tf-nightly-2.0-preview
+tensorflow-estimator-2.0-preview==2.0.0  # via tf-nightly-2.0-preview
 tensorflow-metadata==0.13.0  # via tfds-nightly
 termcolor==1.1.0          # via tf-nightly-2.0-preview, tfds-nightly
-tf-nightly-2.0-preview==2.0.0.dev20190420
-tfds-nightly==1.0.2.dev201904200105
+tf-nightly-2.0-preview==2.0.0.dev20191002
+tfds-nightly==1.3.0.dev201910220105
 tqdm==4.31.1              # via tfds-nightly
 urllib3==1.24.2           # via requests
-werkzeug==0.15.2          # via tb-nightly
+werkzeug==0.15.3          # via tb-nightly
 wheel==0.33.1             # via tb-nightly, tf-nightly-2.0-preview
 wrapt==1.11.1             # via tf-nightly-2.0-preview, tfds-nightly
