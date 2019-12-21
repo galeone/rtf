@@ -14,11 +14,12 @@
 
 """Remote Tensorflow Execution (rtf): gRPC server and clients generators."""
 
-import re
 import os
+import re
 from glob import glob
+
 import pkg_resources
-from setuptools import find_packages, setup, Command
+from setuptools import Command, find_packages, setup
 from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 
@@ -29,7 +30,7 @@ class CompileProto(Command):
     def initialize_options(self):
         """Set default values for options."""
         # pylint: disable=attribute-defined-outside-init
-        self._proto_files = ["rtf/proto/rtf.proto"]
+        self._proto_files = ["rtf/proto/rtf.proto", "rtf/proto/lib/api_objects.proto"]
         self._proto_include = "rtf/proto/"
         self._proto_out = "rtf/proto/"
         self._pb_re = re.compile(r"^(import.*_pb2) as", re.MULTILINE)
