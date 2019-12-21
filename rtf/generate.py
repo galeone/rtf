@@ -15,9 +15,11 @@
 """CLI application to generate rtf clients."""
 
 import os
+import sys
 from argparse import ArgumentParser
-from .generators.base import Generator
+
 from .generators.go import Go
+from .generators.python import Python
 
 
 def make_generator(lang):
@@ -31,6 +33,8 @@ def make_generator(lang):
     generator = None
     if lang == "go":
         generator = Go
+    elif lang == "python":
+        generator = Python
     else:
         raise ValueError(f"Language {lang} not supported")
 
@@ -40,17 +44,23 @@ def make_generator(lang):
 def main():
     """Main, parses CLI, builds and runs the generator."""
     parser = ArgumentParser(
-        description="Convert a Python module to a <target language> package"
+        description="Convert the TensorFlow Python API to a gRPC client for the <target language>"
     )
-    parser.add_argument("--dest_dir", default=os.getcwd())
-    parser.add_argument("--module", default="tensorflow")
-    parser.add_argument("--keep_private", default=False)
-    parser.add_argument("--target", default="Go")
+    parser.add_argument(
+        "--dest_dir", default=os.getcwd(), help="where to put the generated client"
+    )
+    parser.add_argument(
+        "--target", default="Go", help="the target language", choices=["Go", "Python"]
+    )
+    parser.add_argument(
+        "--tensorflow_version",
+        default=2.1,
+        help="The tensorflow version to use",
+        choices=["2.1"],
+    )
     args = parser.parse_args()
-    module = Generator.inspect_module(args.module)
-    generator = make_generator(args.target)
-    return generator(module, args.dest_dir, args.keep_private)
+    return make_generator(args.target)(args.dest_dir, args.tensorflow_version)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
