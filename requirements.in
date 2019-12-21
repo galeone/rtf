@@ -1,5 +1,5 @@
-tf-nightly-2.0-preview
-tfds-nightly
+tensorflow==2.0
+tensorflow-datasets
 better-setuptools-git-version
 grpcio
 grpcio-tools
