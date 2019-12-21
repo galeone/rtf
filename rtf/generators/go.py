@@ -14,6 +14,7 @@
 
 """Generator for the Go programming language."""
 import os
+
 from .base import Generator
 
 
@@ -40,7 +41,7 @@ class Go(Generator):
         "}}\n\n"
     )
 
-    def create_commons(self, module, dest_dir):
+    def _create_commons(self, module, dest_dir):
         module_name = module.name.split(".")[-1]
         base_dir = os.path.join(dest_dir, module_name)
         if not os.path.isdir(base_dir):
@@ -67,11 +68,8 @@ class Go(Generator):
                 "client := rtf.NewRTFClient(conn)\n"
             )
 
-    def convert(self, module, dest_dir, keep_private=False):
-        if not module:
-            return
-
-        module_name = module.name.split(".")[-1]
+    def convert(self, dest_dir, golden_proto_dict):
+        module_name = "tensorflow"
         base_dir = os.path.join(dest_dir, module_name)
         if not os.path.isdir(base_dir):
             os.makedirs(base_dir)
@@ -89,6 +87,7 @@ class Go(Generator):
                         func_name=name, func_signature=func.signature
                     )
                     fp.write(line)
+        raise ValueError("TODO: refactor me - using the GOLDEN dict proto information")
 
         # Every class is a new file. Every new file is memmber of the package.
         for cls in module.classes:
