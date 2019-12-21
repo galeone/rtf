@@ -14,13 +14,19 @@
 
 """Base structures for any RTF client generator."""
 
-import logging
-import inspect
-import types
-import importlib
-import re
 import abc
+import importlib
+import inspect
+import logging
+import os
+import re
+import types
 from collections import namedtuple
+from glob import glob
+
+from google.protobuf import text_format
+
+from ..proto.lib import api_objects_pb2
 
 Func = namedtuple("Func", "name signature private")
 Class = namedtuple("Class", "name init call methods private")
@@ -109,19 +115,88 @@ class Generator:
             private=name.split(".")[-1].startswith("_"),
         )
 
-    @abc.abstractmethod
-    def convert(self, module, dest_dir, keep_private=False):
-        """The convert function, usually recursive, to use for creating the
-        files in the target language. Converts the module from python.
+    @staticmethod
+    def _filename_to_key(filename):
+        """From a given filename, construct a key we use for api objects."""
+
+        def _replace_dash_with_caps(matchobj):
+            match = matchobj.group(0)
+            return match[1].upper()
+
+        base_filename = os.path.basename(filename)
+        base_filename_without_ext = os.path.splitext(base_filename)[0]
+        api_object_key = re.sub(
+            "((-[a-z]){1})", _replace_dash_with_caps, base_filename_without_ext
+        )
+        return api_object_key
+
+    @staticmethod
+    def _read_file_to_proto(filename):
+        """Read a filename, create a protobuf from its contents."""
+        ret_val = api_objects_pb2.TFAPIObject()
+        with open(filename, "r") as fp_pbtxt:
+            pbtxt = fp_pbtxt.read()
+        text_format.Merge(pbtxt, ret_val)
+        return ret_val
+
+    @staticmethod
+    def _filter_golden_proto_dict(golden_proto_dict, omit_golden_symbols_map):
+        """Filter out golden proto dict symbols that should be omitted."""
+        if not omit_golden_symbols_map:
+            return golden_proto_dict
+        filtered_proto_dict = dict(golden_proto_dict)
+        for key, symbol_list in omit_golden_symbols_map.items():
+            api_object = api_objects_pb2.TFAPIObject()
+            api_object.CopyFrom(filtered_proto_dict[key])
+            filtered_proto_dict[key] = api_object
+            module_or_class = None
+            if api_object.HasField("tf_module"):
+                module_or_class = api_object.tf_module
+            elif api_object.HasField("tf_class"):
+                module_or_class = api_object.tf_class
+            if module_or_class is not None:
+                for members in (module_or_class.member, module_or_class.member_method):
+                    filtered_members = [m for m in members if m.name not in symbol_list]
+                    # Two steps because protobuf repeated fields disallow slice assignment.
+                    del members[:]
+                    members.extend(filtered_members)
+        return filtered_proto_dict
+
+    @staticmethod
+    def get_golden_proto_dict(tensorflow_version):
+        """Get the GOLDEN proto dictionary of the TensorFlow API at
+        the specified version (if available).
         """
+        proto_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            os.path.pardir,
+            "proto",
+            "r" + str(tensorflow_version),
+            "*.pbtxt",
+        )
+        golden_file_list = glob(proto_path)
+        golden_proto_dict = {
+            Generator._filename_to_key(filename): Generator._read_file_to_proto(
+                filename
+            )
+            for filename in golden_file_list
+        }
+        omit_golden_symbols_map = {}
+        golden_proto_dict = Generator._filter_golden_proto_dict(
+            golden_proto_dict, omit_golden_symbols_map
+        )
+        return golden_proto_dict
 
     @abc.abstractmethod
-    def create_commons(self, module, dest_dir):
-        """Create commons is called only once as the first operation of the conversion.
-        If you need to create some common files/methods that are shared and available
-        to the "convert" method, define them here.
+    def convert(self, dest_dir, golden_proto_dict):
+        """The convert function to use for creating the
+        files in the target language.
+        Use the golden_proto_dict to create the client.
+        Args:
+            dest_dir: the destination dir of the package
+            golden_proto_dict: the dictionary of the TensorFlow API
+                               (obtained via get_golden_proto_dict).
         """
 
-    def __call__(self, module, dest_dir, keep_private=False):
-        self.create_commons(module, dest_dir)
-        self.convert(module, dest_dir, keep_private)
+    def __call__(self, dest_dir, tensorflow_version):
+        self.convert(dest_dir, Generator.get_golden_proto_dict(tensorflow_version))
