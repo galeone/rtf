@@ -43,16 +43,16 @@ class Go(Generator):
 
     def _create_commons(self, module, dest_dir):
         module_name = module.name.split(".")[-1]
-        base_dir = os.path.join(dest_dir, module_name)
+        base_dir = os.path.join(dest_dir, Generator.MODULE_NAME)
         if not os.path.isdir(base_dir):
             os.makedirs(base_dir)
 
         # TODO: Compile the .proto to .go
 
-        common_file = os.path.join(base_dir, "_" + module_name + ".go")
+        common_file = os.path.join(base_dir, "_" + Generator.MODULE_NAME + ".go")
         with open(common_file, "w") as fp:
             # The header puts the file into the same package
-            fp.write(Go.HEADER.format(package=module_name))
+            fp.write(Go.HEADER.format(package=Generator.MODULE_NAME))
             fp.write("import (\n")
             for package in ["context", "google.golang.org/grpc"]:
                 fp.write('\t"{}"\n'.format(package))
@@ -69,16 +69,12 @@ class Go(Generator):
             )
 
     def convert(self, dest_dir, golden_proto_dict):
-        module_name = "tensorflow"
-        base_dir = os.path.join(dest_dir, module_name)
-        if not os.path.isdir(base_dir):
-            os.makedirs(base_dir)
-
-        package_file = os.path.join(base_dir, module_name + ".go")
+        base_dir = os.path.join(dest_dir, Generator.MODULE_NAME)
+        package_file = os.path.join(base_dir, Generator.MODULE_NAME + ".go")
         with open(package_file, "w") as fp:
             # Main package: contains only the converted functions
             # + some Go utilities.
-            fp.write(Go.HEADER.format(package=module_name))
+            fp.write(Go.HEADER.format(package=Generator.MODULE_NAME))
             for func in module.functions:
                 if not func.private or keep_private:
                     name = func.name.split(".")[-1]
@@ -97,7 +93,7 @@ class Go(Generator):
             )
             with open(file_path, "w") as fp:
                 type_name = Generator.snake_to_camel(py_name)
-                fp.write(Go.HEADER.format(package=module_name))
+                fp.write(Go.HEADER.format(package=Generator.MODULE_NAME))
                 fp.write(Go.CLASS.format(type_name=type_name))
 
                 fp.write(

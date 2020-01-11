@@ -15,62 +15,21 @@
 """Base structures for any RTF client generator."""
 
 import abc
-import importlib
-import inspect
+import ast
 import logging
 import os
 import re
-import types
-from collections import namedtuple
 from glob import glob
 
 from google.protobuf import text_format
 
 from ..proto.lib import api_objects_pb2
 
-Func = namedtuple("Func", "name signature private")
-Class = namedtuple("Class", "name init call methods private")
-Module = namedtuple("Module", "name modules functions classes private")
-
 
 class Generator:
     """Base class for any RTF client generator."""
 
-    @staticmethod
-    def _inspect_function(element_name, element):
-        return Func(
-            name=element_name,
-            signature=str(inspect.signature(element)),
-            private=element_name.startswith("_"),
-        )
-
-    @staticmethod
-    def _inspect_class(element_name, element):
-        special = ["__init__", "__call__"]
-
-        methods = [
-            Generator._inspect_function(method_name, getattr(element, method_name))
-            for method_name in dir(element)
-            if method_name not in special
-            and isinstance(getattr(element, method_name), types.FunctionType)
-        ]
-
-        init, call = None, None
-        for method_name in special:
-            func = getattr(element, method_name)
-            if isinstance(func, types.FunctionType):
-                if method_name == "__init__":
-                    init = Generator._inspect_function(method_name, func)
-                if method_name == "__call__":
-                    call = Generator._inspect_function(method_name, func)
-
-        return Class(
-            name=element_name,
-            init=init,
-            call=call,
-            methods=methods,
-            private=element_name.startswith("_"),
-        )
+    MODULE_NAME = "tensorflow"
 
     @staticmethod
     def snake_to_camel(name):
@@ -82,38 +41,6 @@ class Generator:
         """Convert a CamelName to a snake_name."""
         sub = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", sub).lower()
-
-    @staticmethod
-    def inspect_module(name):
-        """Given a name module, returns the Module object containing its description."""
-        try:
-            module = importlib.import_module(name)
-        except ModuleNotFoundError as exc:
-            logging.warning("Unable to import module: %s - error %s", name, exc)
-            return None
-
-        functions = []
-        modules = []
-        classes = []
-        for element_name in dir(module):
-            element = getattr(module, element_name)
-            fullname = name + "." + element_name
-            if inspect.ismodule(element):
-                submodule = Generator.inspect_module(fullname)
-                if submodule:
-                    modules.append(submodule)
-            elif inspect.isclass(element):
-                classes.append(Generator._inspect_class(fullname, element))
-            elif hasattr(element, "__call__"):
-                functions.append(Generator._inspect_function(fullname, element))
-
-        return Module(
-            name=name,
-            modules=modules,
-            functions=functions,
-            classes=classes,
-            private=name.split(".")[-1].startswith("_"),
-        )
 
     @staticmethod
     def _filename_to_key(filename):
@@ -133,6 +60,7 @@ class Generator:
     @staticmethod
     def _read_file_to_proto(filename):
         """Read a filename, create a protobuf from its contents."""
+
         ret_val = api_objects_pb2.TFAPIObject()
         with open(filename, "r") as fp_pbtxt:
             pbtxt = fp_pbtxt.read()
@@ -142,6 +70,7 @@ class Generator:
     @staticmethod
     def _filter_golden_proto_dict(golden_proto_dict, omit_golden_symbols_map):
         """Filter out golden proto dict symbols that should be omitted."""
+
         if not omit_golden_symbols_map:
             return golden_proto_dict
         filtered_proto_dict = dict(golden_proto_dict)
@@ -164,9 +93,11 @@ class Generator:
 
     @staticmethod
     def get_golden_proto_dict(tensorflow_version):
-        """Get the GOLDEN proto dictionary of the TensorFlow API at
+        """
+        Get the GOLDEN proto dictionary of the TensorFlow API at
         the specified version (if available).
         """
+
         proto_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             os.path.pardir,
@@ -189,9 +120,11 @@ class Generator:
 
     @abc.abstractmethod
     def convert(self, dest_dir, golden_proto_dict):
-        """The convert function to use for creating the
+        """
+        The convert function to use for creating the
         files in the target language.
         Use the golden_proto_dict to create the client.
+
         Args:
             dest_dir: the destination dir of the package
             golden_proto_dict: the dictionary of the TensorFlow API
@@ -199,4 +132,31 @@ class Generator:
         """
 
     def __call__(self, dest_dir, tensorflow_version):
+        base_dir = os.path.join(dest_dir, Generator.MODULE_NAME)
+        if not os.path.isdir(base_dir):
+            os.makedirs(base_dir)
         self.convert(dest_dir, Generator.get_golden_proto_dict(tensorflow_version))
+
+
+class Parser:
+    @staticmethod
+    def _parse_argspec(argspec):
+        # Argspec needs to be "corrected" in order to be correctly parsed.
+        # Eg. The argspect of certain methods could be: args=['something'], varargs=args
+        # but since args is not a variable, this will throw an error when parsed using
+        # literal eval.
+        args = f"f({argspec})"
+        args = args.replace("varargs=args", "varargs='args'").replace(
+            "keywords=kwargs", "keywords='kwargs'"
+        )
+
+        tree = ast.parse(args)
+        funccall = tree.body[0].value
+        # { 'args': [], 'varargs': [], 'keywords': [], 'defaults': [] }
+        return {arg.arg: ast.literal_eval(arg.value) for arg in funccall.keywords}
+
+    @abc.abstractstaticmethod
+    def build_signature(argspec):
+        """Given an input argspec (obtained via _parse_argspec), builds
+        the signature for the function, in the target language.
+        """

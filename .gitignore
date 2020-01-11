@@ -124,3 +124,6 @@ dmypy.json
 
 # Compiled protobuf are ignored since are generated on build/develop
 *_pb2*.py
+
+# Ignore tensorflow directory, used during development as destination dir
+tensorflow/
