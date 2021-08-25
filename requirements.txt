@@ -29,24 +29,24 @@ future==0.18.2
     # via tensorflow-datasets
 gast==0.4.0
     # via tensorflow
-google-auth-oauthlib==0.4.1
-    # via tensorboard
 google-auth==1.10.0
     # via
     #   google-auth-oauthlib
     #   tensorboard
+google-auth-oauthlib==0.4.1
+    # via tensorboard
 google-pasta==0.2.0
     # via tensorflow
 googleapis-common-protos==1.6.0
     # via tensorflow-metadata
-grpcio-tools==1.26.0
-    # via -r requirements.in
 grpcio==1.34.1
     # via
     #   -r requirements.in
     #   grpcio-tools
     #   tensorboard
     #   tensorflow
+grpcio-tools==1.26.0
+    # via -r requirements.in
 h5py==3.1.0
     # via tensorflow
 idna==2.8
@@ -79,19 +79,19 @@ protobuf==3.11.2
     #   tensorflow
     #   tensorflow-datasets
     #   tensorflow-metadata
-pyasn1-modules==0.2.7
-    # via google-auth
 pyasn1==0.4.8
     # via
     #   pyasn1-modules
     #   rsa
-requests-oauthlib==1.3.0
-    # via google-auth-oauthlib
+pyasn1-modules==0.2.7
+    # via google-auth
 requests==2.22.0
     # via
     #   requests-oauthlib
     #   tensorboard
     #   tensorflow-datasets
+requests-oauthlib==1.3.0
+    # via google-auth-oauthlib
 rsa==4.0
     # via google-auth
 six==1.15.0
@@ -106,20 +106,20 @@ six==1.15.0
     #   protobuf
     #   tensorflow
     #   tensorflow-datasets
+tensorboard==2.5.0
+    # via tensorflow
 tensorboard-data-server==0.6.1
     # via tensorboard
 tensorboard-plugin-wit==1.8.0
     # via tensorboard
-tensorboard==2.5.0
-    # via tensorflow
+tensorflow==2.5.1
+    # via -r requirements.in
 tensorflow-datasets==1.3.2
     # via -r requirements.in
 tensorflow-estimator==2.5.0
     # via tensorflow
 tensorflow-metadata==0.15.2
     # via tensorflow-datasets
-tensorflow==2.5.0
-    # via -r requirements.in
 termcolor==1.1.0
     # via
     #   tensorflow
